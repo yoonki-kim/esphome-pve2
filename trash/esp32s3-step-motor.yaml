@@ -1,0 +1,31 @@
+esphome:
+  name: esp32s3-step-motor
+  friendly_name: esp32s3_step_motor
+
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "a6Uz88WzBezzuxViyhTx1fn6R/MXO2WkRVs5x2rvsXg="
+
+ota:
+  password: "d1b1f2cafc4579450a9a05976288ece1"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Esp32S3-Step-Motor"
+    password: "QHSS8nkWd85h"
+
+captive_portal:
+    

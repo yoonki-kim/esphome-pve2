@@ -1,0 +1,312 @@
+esphome:
+  includes:
+
+# Example configuration entry
+pcf8574:
+  - id: 'fault_input'
+    address: 0x21
+    pcf8575: false
+    i2c_id: i2c_bus_b
+
+  - id: 'o3sensor_output'
+    address: 0x22
+    pcf8575: false
+    i2c_id: i2c_bus_b
+  - id: 'io_ext_io'
+    address: 0x22
+    pcf8575: false
+    i2c_id: i2c_bus_b
+
+  - id: 'digital_input'
+    address: 0x23
+    pcf8575: false
+    i2c_id: i2c_bus_b
+
+  - id: 'digital_output'
+    address: 0x25
+    pcf8575: false
+    i2c_id: i2c_bus_b
+
+binary_sensor:
+  ## FAULT Signal Input ===========================
+  - platform: gpio
+    name: "ch1_FAULT_DRV_A"
+    id: ch1_fault_drv_a
+    pin: 
+      pcf8574: fault_input
+      number: 0
+      mode: INPUT
+      inverted: true
+  - platform: gpio
+    name: "ch2_FAULT_DRV_B"
+    id: ch2_fault_drv_b
+    pin: 
+      pcf8574: fault_input
+      number: 1
+      mode: INPUT
+      inverted: true
+  - platform: gpio
+    name: "ch3_FAULT_DRV_C"
+    id: ch3_fault_drv_c
+    pin: 
+      pcf8574: fault_input
+      number: 2
+      mode: INPUT
+      inverted: true
+  - platform: gpio
+    name: "ch4_FAULT_DRV_D"
+    id: ch4_fault_drv_d
+    pin: 
+      pcf8574: fault_input
+      number: 3
+      mode: INPUT
+      inverted: true
+  - platform: gpio
+    name: "ch5_FAULT_TEMPERATURE" ## TEMPERATURE Fault Signal input
+    id: ch5_fault_temperature
+    pin: 
+      pcf8574: fault_input
+      number: 4
+      mode: INPUT
+      inverted: true
+  - platform: gpio
+    name: "ch6_FAULT_EMERGENCY"   ## EMERGENCY Fault Signal input
+    id: ch6_fault_emergency
+    pin: 
+      pcf8574: fault_input
+      number: 5
+      mode: INPUT
+      inverted: true
+  - platform: gpio
+    name: "ch7_FAULT_DC-PSU"      ## DCPS Fault Signal input
+    id: ch7_fault_dcpsu
+    pin: 
+      pcf8574: fault_input
+      number: 6
+      mode: INPUT
+      inverted: true
+  - platform: gpio
+    name: "ch8_FAULT_EXTERNAL"    ## EXTERNAL Fault Signal input
+    id: ch8_fault_external
+    pin: 
+      pcf8574: fault_input
+      number: 7
+      mode: INPUT
+      inverted: true
+
+  ## Digital Input ================================
+  - platform: gpio
+    name: "digital Input ch1"
+    id: digital_input_ch1
+    pin: 
+      pcf8574: digital_input
+      number: 0
+      mode: INPUT
+      inverted: true
+  - platform: gpio
+    name: "digital Input ch2"
+    id: digital_input_ch2
+    pin: 
+      pcf8574: digital_input
+      number: 1
+      mode: INPUT
+      inverted: true
+  - platform: gpio
+    name: "digital Input ch3"
+    id: digital_input_ch3
+    pin: 
+      pcf8574: digital_input
+      number: 2
+      mode: INPUT
+      inverted: true
+  - platform: gpio
+    name: "digital Input ch4"
+    id: digital_input_ch4
+    pin: 
+      pcf8574: digital_input
+      number: 3
+      mode: INPUT
+      inverted: true
+  - platform: gpio
+    name: "digital Input ch5"
+    id: digital_input_ch5
+    pin: 
+      pcf8574: digital_input
+      number: 4
+      mode: INPUT
+      inverted: true
+  - platform: gpio
+    name: "digital Input ch6"
+    id: digital_input_ch6
+    pin: 
+      pcf8574: digital_input
+      number: 5
+      mode: INPUT
+      inverted: true
+  - platform: gpio
+    name: "digital Input ch7"
+    id: digital_input_ch7
+    pin: 
+      pcf8574: digital_input
+      number: 6
+      mode: INPUT
+      inverted: true
+  - platform: gpio
+    name: "digital Input ch8"
+    id: digital_input_ch8
+    pin: 
+      pcf8574: digital_input
+      number: 7
+      mode: INPUT
+      inverted: true
+
+switch:
+  ## O3Sensor Output ==============================
+  - platform: gpio
+    name: "o3sensor SDOUT1"
+    id: o3sensor_sdout1
+    pin:
+      pcf8574: o3sensor_output
+      number: 0
+      mode:
+        output: true
+      inverted: true
+  - platform: gpio
+    name: "o3sensor SDOUT2"
+    id: o3sensor_sdout2
+    pin:
+      pcf8574: o3sensor_output
+      number: 1
+      mode:
+        output: true
+      inverted: true
+  - platform: gpio
+    name: "o3sensor SDOUT3"
+    id: o3sensor_sdout3
+    pin:
+      pcf8574: o3sensor_output
+      number: 2
+      mode:
+        output: true
+      inverted: true
+  - platform: gpio
+    name: "o3sensor SDOUT4"
+    id: o3sensor_sdout4
+    pin:
+      pcf8574: o3sensor_output
+      number: 3
+      mode:
+        output: true
+      inverted: true
+
+  ## O3Sensor Output ==============================
+  - platform: gpio
+    name: "io_ext1"
+    id: io_ext1
+    pin:
+      pcf8574: io_ext_io
+      number: 4
+      mode:
+        output: true
+      inverted: true
+  - platform: gpio
+    name: "io_ext2"
+    id: io_ext2
+    pin:
+      pcf8574: io_ext_io
+      number: 5
+      mode:
+        output: true
+      inverted: true
+  - platform: gpio
+    name: "io_ext3"
+    id: io_ext3
+    pin:
+      pcf8574: io_ext_io
+      number: 6
+      mode:
+        output: true
+      inverted: true
+  - platform: gpio
+    name: "io_ext4"
+    id: io_ext4
+    pin:
+      pcf8574: io_ext_io
+      number: 7
+      mode:
+        output: true
+      inverted: true
+
+  ## Digital Output ===============================
+  - platform: gpio
+    name: "digital Output ch1"
+    id: digital_output_ch1
+    pin:
+      pcf8574: digital_output
+      number: 0
+      mode:
+        output: true
+      inverted: true
+  - platform: gpio
+    name: "digital Output ch2"
+    id: digital_output_ch2
+    pin:
+      pcf8574: digital_output
+      number: 1
+      mode:
+        output: true
+      inverted: true
+  - platform: gpio
+    name: "digital Output ch3"
+    id: digital_output_ch3
+    pin:
+      pcf8574: digital_output
+      number: 2
+      mode:
+        output: true
+      inverted: true
+  - platform: gpio
+    name: "digital Output ch4"    
+    id: digital_output_ch4
+    pin:
+      pcf8574: digital_output
+      number: 3
+      mode:
+        output: true
+      inverted: true
+  - platform: gpio
+    name: "digital Output ch5"
+    id: digital_output_ch5
+    pin:
+      pcf8574: digital_output
+      number: 4
+      mode:
+        output: true
+      inverted: true
+  - platform: gpio
+    name: "digital Output ch6"
+    id: digital_output_ch6
+    pin:
+      pcf8574: digital_output
+      number: 5
+      mode:
+        output: true
+      inverted: true
+  - platform: gpio
+    name: "digital Output ch7"    
+    id: digital_output_ch7
+    pin:
+      pcf8574: digital_output
+      number: 6
+      mode:
+        output: true
+      inverted: true
+  - platform: gpio
+    name: "digital Output ch8"
+    id: digital_output_ch8
+    pin:
+      pcf8574: digital_output
+      number: 7
+      mode:
+        output: true
+      inverted: true

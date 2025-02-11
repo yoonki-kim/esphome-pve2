@@ -1,0 +1,118 @@
+esphome:
+  name: ps-pwm-test
+  friendly_name: ps_pwm_test
+  includes:
+    - custom_components/ps_pwm/ps_pwm.h
+    - custom_components/ps_pwm/ps_pwm.c
+    - custom_components/ps_pwm/ps_pwm_custom_component.h
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "y2GnYb10K5MWkKBHZempi0Eb3wMdy/ydArLjjj+vK5E="
+
+ota:
+  password: "a3fe9db6e0422fce93c55fdee8871aef"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Ps-Pwm-Test Fallback Hotspot"
+    password: "wKfniK6ziMX1"
+
+captive_portal:
+
+web_server:
+  port: 80
+
+# switch:
+#   - platform: gpio
+#     pin: GPIO2
+#     name: "OnBoard LED"
+#     id: onboard_led
+
+binary_sensor:
+  - platform: gpio
+    pin: 
+      number: GPIO0
+      inverted: true
+    name: "OnBoard Button"
+    id: onboard_button
+    on_press:
+      then:
+        # - switch.toggle: onboard_led
+        - output.turn_on: pspwm_output
+    on_release:
+      then:
+        # - switch.toggle: onboard_led
+        - output.turn_off: pspwm_output
+  - platform: custom
+    lambda: |-
+      auto my_pspwm_binary_sensor = new PSpwmCustomBinarySensor();
+      App.register_component(my_pspwm_binary_sensor);
+      return {my_pspwm_binary_sensor};
+    binary_sensors:
+      name: "pspwm_fault_sensor"
+      id: pspwm_fault_sensor
+
+output:
+  - platform: custom
+    type: float
+    lambda: |-
+      auto my_pspwm_output = new PSpwmCustomOutput();
+      App.register_component(my_pspwm_output);
+      return {my_pspwm_output};
+    outputs:
+      id: pspwm_output
+
+button:
+  - platform: template
+    name: "ps_pwm_on"
+    id: ps_pwm_on
+    on_press:
+      then:
+        - output.turn_on: pspwm_output
+  - platform: template
+    name: "ps_pwm_off & reset"
+    id: ps_pwm_off
+    on_press:
+      then:
+        - output.turn_off: pspwm_output
+
+# Example configuration entry
+number:
+  - platform: template
+    name: "ps_pwm_frequency"
+    id: ps_pwm_frequency
+    optimistic: true
+    min_value: 15000
+    max_value: 40000
+    # initial_value: 20000
+    restore_value: true
+    step: 1000
+    on_value: 
+      - lambda: |-
+          id(pspwm_output).update_frequency(x);
+  - platform: template
+    name: "ps_pwm_duty"
+    id: ps_pwm_duty
+    optimistic: true
+    min_value: 0
+    max_value: 1
+    # initial_value: 0.45
+    restore_value: true
+    step: 0.01
+    on_value:
+      - lambda: |-
+          id(pspwm_output).set_level(x);

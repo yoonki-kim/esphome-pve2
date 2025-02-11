@@ -1,0 +1,31 @@
+esphome:
+  name: step-motor-tmc2226
+  friendly_name: step_motor_tmc2226
+
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "uu5+5Z8rVplkTtTrVtLCKYZ80uoT6jzmzEdj8JZRF7U="
+
+ota:
+  password: "bab5c43e6c95019a6e6f3093aa3eee4d"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Step-Motor-Tmc2226"
+    password: "Esk0uqio2EcI"
+
+captive_portal:
+    

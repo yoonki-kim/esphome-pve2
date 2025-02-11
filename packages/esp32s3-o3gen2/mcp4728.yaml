@@ -1,0 +1,86 @@
+esphome:
+  includes:
+
+# Set the component with default (address: 0x60 / global I²C)
+mcp4728:
+  - id: dac_output
+    i2c_id: i2c_bus_a
+
+output:
+  - platform: mcp4728
+    id: dcps_voltage_prog
+    mcp4728_id: dac_output
+    channel: A
+    vref: internal
+    gain: X1
+    power_down: normal # default
+  - platform: mcp4728
+    id: dcps_current_prog
+    mcp4728_id: dac_output
+    channel: B
+    vref: internal
+    gain: X1
+    power_down: normal # default
+  - platform: mcp4728
+    id: dac_spare1
+    mcp4728_id: dac_output
+    channel: C
+    vref: internal
+    gain: X1
+    power_down: normal # default
+  - platform: mcp4728
+    id: dac_spare2
+    mcp4728_id: dac_output
+    channel: D
+    vref: internal
+    gain: X1
+    power_down: normal # default
+
+number:
+  - platform: template
+    name: "03_DCPS_Voltage_set"
+    id: dcps_voltage_set
+    optimistic: true
+    min_value: 0
+    max_value: 1
+    restore_value: true
+    step: 0.01
+    on_value:
+      - lambda: |-
+          id(dcps_voltage_prog).set_level(x);
+  - platform: template
+    name: "04_DCPS_Current_set"
+    id: dcps_current_set
+    optimistic: true
+    min_value: 0
+    max_value: 1
+    restore_value: true
+    step: 0.01
+    on_value:
+      - lambda: |-
+          id(dcps_current_prog).set_level(x);
+  - platform: template
+    name: "dac_spare1_set"
+    id: dac_spare1_set
+    optimistic: true
+    min_value: 0
+    max_value: 1
+    restore_value: true
+    step: 0.01
+    on_value:
+      - lambda: |-
+          id(dac_spare1).set_level(x);
+  - platform: template
+    name: "dac_spare2_set"
+    id: dac_spare2_set
+    optimistic: true
+    min_value: 0
+    max_value: 1
+    restore_value: true
+    step: 0.01
+    on_value:
+      - lambda: |-
+          id(dac_spare2).set_level(x);
+
+
+

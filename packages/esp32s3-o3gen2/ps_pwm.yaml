@@ -1,0 +1,84 @@
+esphome:
+  includes:
+    - custom_components/ps_pwm/ps_pwm.h
+    - custom_components/ps_pwm/ps_pwm.c
+    - custom_components/ps_pwm/ps_pwm_custom_component.h
+
+output:
+  - platform: custom
+    type: float
+    lambda: |-
+      auto my_pspwm_output = new PSpwmCustomOutput();
+      App.register_component(my_pspwm_output);
+      return {my_pspwm_output};
+    outputs:
+      id: pspwm_output
+
+binary_sensor:
+  - platform: custom
+    lambda: |-
+      auto my_pspwm_binary_sensor = new PSpwmCustomBinarySensor();
+      App.register_component(my_pspwm_binary_sensor);
+      return {my_pspwm_binary_sensor};
+    binary_sensors:
+      ## GPIO8 (OCP_PULSE)
+      name: "PS_PWM_fault_sensor"
+      id: ps_pwm_fault_sensor
+      on_state:
+        then:
+          - switch.turn_off: ps_pwm_status
+
+button:
+  - platform: template
+    name: "PS_PWM_on"
+    id: ps_pwm_on
+    on_press:
+      then:
+        - output.turn_on: pspwm_output
+        - if:
+            condition:
+              lambda: |-
+                return id(ps_pwm_fault_sensor).state == false;
+            then:
+              - switch.turn_on: ps_pwm_status
+  - platform: template
+    name: "PS_PWM_off & reset"
+    id: ps_pwm_off
+    on_press:
+      then:
+        - output.turn_off: pspwm_output
+        - switch.turn_off: ps_pwm_status
+
+switch:
+  - platform: template
+    name: "PS_PWM OnOff status"
+    id: ps_pwm_status
+    optimistic: true
+
+# Example configuration entry
+number:
+  ## PS_PWM Setting (Test)
+  - platform: template
+    name: "PS_PWM_frequency"
+    id: ps_pwm_frequency
+    optimistic: true
+    min_value: 15000
+    max_value: 40000
+    # initial_value: 20000
+    restore_value: true
+    step: 1000
+    on_value: 
+      - lambda: |-
+          id(pspwm_output).update_frequency(x);
+  - platform: template
+    name: "PS_PWM_duty"
+    id: ps_pwm_duty
+    optimistic: true
+    min_value: 0
+    max_value: 1
+    # initial_value: 0.45
+    restore_value: true
+    step: 0.01
+    on_value:
+      - lambda: |-
+          id(pspwm_output).set_level(x);

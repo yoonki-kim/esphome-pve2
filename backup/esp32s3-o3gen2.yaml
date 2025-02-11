@@ -1,0 +1,491 @@
+esphome:
+  name: esp32s3-o3gen2
+  friendly_name: esp32s3-o3gen2
+  name_add_mac_suffix: true
+  on_boot:
+    then:
+      - lambda: |-
+          id(dcps_voltage_prog).set_level((id(voltage)*0.000286-0.015)*0.9988+0.0114);
+          //id(dcps_voltage_prog).set_level(0);
+          //id(dcps_current_prog).set_level(id(current)*0.0059-0.00294);
+          id(dcps_current_prog).set_level(id(current)*0.00059-0.0349);
+          id(pspwm_output).update_frequency(id(frequency));
+          id(pspwm_output).set_level(id(duty));
+
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: arduino
+  flash_size: 16MB
+  variant: ESP32S3
+
+# Enable logging
+logger:
+  # level: DEBUG
+  level: INFO
+  baud_rate: 115200
+  hardware_uart: UART0
+
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "J9I3TutY+Q0vIWWPsKNjJt1rOa44bNr2TUTGdOiyJ+c="
+  reboot_timeout: 0s
+
+ota:
+  password: "85363336a0c37608fb13036bd0222445"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Esp32S3-Test1"
+    password: "temaat2023"
+
+  # Optional manual IP
+  manual_ip:
+    static_ip: 192.168.10.108
+    gateway: 192.168.10.1
+    subnet: 255.255.255.0
+
+captive_portal:
+
+mdns:
+  disabled: false
+
+web_server:
+  port: 80
+
+packages:
+  ps_pwm: !include packages/esp32s3-o3gen2/ps_pwm.yaml
+  mcp4728: !include packages/esp32s3-o3gen2/mcp4728.yaml
+  ads1115: !include packages/esp32s3-o3gen2/ads1115.yaml
+  ts5a3357: !include packages/esp32s3-o3gen2/ts5a3357.yaml
+  pcf8574: !include packages/esp32s3-o3gen2/pcf8574.yaml
+
+i2c:
+  ## i2c_bus_a for Analog input & output (ADC & DAC)
+  - id: i2c_bus_a
+    scl: GPIO1
+    sda: GPIO2
+    scan: true
+  ## i2c_bus_b for Digital input & output (DIO)
+  - id: i2c_bus_b
+    scl: GPIO10
+    sda: GPIO11
+    scan: true
+
+# 변수 설정
+globals:
+  - id: pharameter
+    type: int
+    restore_value: false
+    initial_value: '-1'
+
+  - id: voltage
+    type: float
+    restore_value: True
+  
+  - id: current
+    type: float
+    restore_value: True
+  
+  - id: frequency
+    type: int
+    restore_value: True
+    # initial_value: '15000'
+  
+  - id: duty
+    type: float
+    restore_value: True
+
+switch:
+  - platform: gpio
+    pin: GPIO46
+    name: "OnBoard LED"
+    id: onboard_led
+
+  - platform: gpio
+    pin:
+      number: GPIO9
+      inverted: true
+    name: "05_DCPS_PWR_OnOff"
+    id: dcps_pwr_onoff
+
+  - platform: gpio
+    pin: 
+      number: GPIO8
+      inverted: True
+    name: "OCP_PUSLE"
+    id: ocp_pusle
+
+binary_sensor:
+## OnBoard Button (D0)
+  - platform: gpio
+    pin: 
+      number: GPIO0
+      inverted: true
+    name: "OnBoard Button"
+    id: onboard_button
+    on_press:
+      then:
+        - switch.toggle: onboard_led
+
+## Encoder button 설정
+  - platform: gpio
+    pin:
+      number: GPIO21
+      inverted: True
+      mode:
+        input: True
+    name: "Rotary Encoder Button"
+    on_press: 
+      then:
+        - lambda: 
+            id(pharameter)++;
+            if(id(pharameter)==4) {
+              id(pharameter)=0;
+            }
+            if(id(pharameter)==0) {
+              id(my_nextion).send_command_printf("page0.x0.pco=64520");
+              id(my_nextion).send_command_printf("page0.x2.pco=0");
+              id(my_nextion).send_command_printf("page0.n0.pco=0");
+              id(my_nextion).send_command_printf("page0.x8.pco=0");
+            }
+            else if(id(pharameter)==1) {
+              id(my_nextion).send_command_printf("page0.x0.pco=0");
+              id(my_nextion).send_command_printf("page0.x2.pco=64520");
+              id(my_nextion).send_command_printf("page0.n0.pco=0");
+              id(my_nextion).send_command_printf("page0.x8.pco=0");
+            }
+            else if(id(pharameter)==2) {
+              id(my_nextion).send_command_printf("page0.x0.pco=0");
+              id(my_nextion).send_command_printf("page0.x2.pco=0");
+              id(my_nextion).send_command_printf("page0.n0.pco=64520");
+              id(my_nextion).send_command_printf("page0.x8.pco=0");
+            }
+            else if(id(pharameter)==3) {
+            id(my_nextion).send_command_printf("page0.x0.pco=0");
+            id(my_nextion).send_command_printf("page0.x2.pco=0");
+            id(my_nextion).send_command_printf("page0.n0.pco=0");
+            id(my_nextion).send_command_printf("page0.x8.pco=64520");
+            }
+
+## Encoder로 파라미터 값 변경
+sensor:
+  - platform: rotary_encoder
+    name: "Rotary Encoder"
+    id: my_rotary_encoder
+    pin_a: GPIO13
+    pin_b: GPIO14
+    resolution: 1                 # how many pulses are henerated by one step
+    publish_initial_value: False  # 시작시 Encdoer값 표시 여부
+    restore_mode: ALWAYS_ZERO
+    on_clockwise: 
+      then:
+        - lambda: |-
+            if(id(pharameter)==0) {
+              if(id(voltage)>=3500){
+                id(voltage)=3490;  // MAX=350.0V
+              }
+              id(voltage) += 10;
+              id(my_nextion).set_component_value("page0.x0", id(voltage));
+              //id(dcps_voltage_prog).set_level((id(voltage)*0.000286-0.015)*0.9988+0.0114);
+              id(dcps_voltage_prog).set_level((id(voltage)*0.000286-0.015)*0.9988+0.0054);
+            } 
+            else if(id(pharameter)==1) {
+              if(id(current)>=1700){
+                id(current)=1690;  // MAX=17.00V
+              }
+              id(current) += 10;
+              id(my_nextion).set_component_value("page0.x2", id(current));
+              //id(dcps_current_prog).set_level(id(current)*0.00059-0.00294);
+              id(dcps_current_prog).set_level(id(current)*0.00059-0.0349);
+            }
+            else if(id(pharameter)==2) {
+              if(id(frequency)>=40000){
+                id(frequency)=39000;    // Max=40000Hz
+              }
+              id(frequency)+=1000;
+              id(my_nextion).set_component_value("page0.n0", id(frequency)/1000);
+              //id(my_nextion).set_component_value("page3.n0", id(frequency)/1000);
+              //id(ps_pwm_frequency).state=id(frequency);
+              id(pspwm_output).update_frequency(id(frequency));
+            }
+            else if(id(pharameter)==3) {
+              if(id(duty)>=1){
+                id(duty)=0.99;
+              }
+              id(duty)+=0.01;
+              id(my_nextion).set_component_value("page0.x8", id(duty)*100);
+              //id(my_nextion).set_component_value("page3.n1", id(duty)*100);
+              //id(ps_pwm_duty).state=id(duty);
+              id(pspwm_output).set_level(id(duty));
+            }
+    on_anticlockwise: 
+      then:
+        - lambda: |-
+            if(id(pharameter)==0) {
+              if(id(voltage)<=0){
+                id(voltage)=10;    //min=0V
+              }
+              id(voltage) -= 10;
+              id(my_nextion).set_component_value("page0.x0", id(voltage));
+              //id(dcps_voltage_prog).set_level((id(voltage)*0.000286-0.0149)*0.9988+0.0114);
+              id(dcps_voltage_prog).set_level((id(voltage)*0.000286-0.0149)*0.9988+0.0054);
+            } 
+            else if(id(pharameter)==1) {
+              if(id(current)<=0){
+                id(current)=10;    //min=0A
+              }
+              id(current) -= 10;
+              id(my_nextion).set_component_value("x2", id(current));
+              //id(dcps_current_prog).set_level(id(current)*0.00059-0.00294);
+              id(dcps_current_prog).set_level(id(current)*0.00059-0.0349);
+            }
+            else if(id(pharameter)==2) {
+              if(id(frequency)<=15000){
+                id(frequency)=16000;    // min=15000Hz
+              }
+              id(frequency)-=1000;
+              id(my_nextion).set_component_value("page0.n0", id(frequency)/1000);
+              //id(my_nextion).set_component_value("page3.n0", id(frequency)/1000);
+              //id(ps_pwm_frequency).state=id(frequency);
+              id(pspwm_output).update_frequency(id(frequency));
+            }
+            else if(id(pharameter)==3) {
+              if(id(duty)<=0){
+                id(duty)=0.01;
+              }
+              id(duty)-=0.01;
+              id(my_nextion).set_component_value("page0.x8", id(duty)*100);
+              //id(my_nextion).set_component_value("page3.n1", id(duty)*100);
+              //id(ps_pwm_duty).state=id(duty);
+              id(pspwm_output).set_level(id(duty));
+            }
+
+## NEXTION HMI
+uart:
+  id: uart_nextion
+  rx_pin: GPIO15
+  tx_pin: GPIO16
+  baud_rate: 115200
+
+display:
+  - platform: nextion
+    id: my_nextion
+    uart_id: uart_nextion
+    update_interval: 0.5s
+    # 전원ON/OFF 시 hmi에 이전값 유지
+    lambda: |-
+      id(my_nextion).set_component_value("x10", id(o3_sensor_monitor).state);
+      id(my_nextion).set_component_value("x5", id(inverter_current_raw).state*1000);
+      id(my_nextion).set_component_value("x4", id(inverter_voltage_raw).state);
+      id(my_nextion).set_component_value("x7", id(highvoltage_current_raw).state);
+      id(my_nextion).set_component_value("x1", id(dcps_current_monitor).state*1000); //adc에 들어가는 값
+      id(my_nextion).set_component_value("x3", id(dcps_voltage_monitor).state*1000); //adc에 들어가는 값
+
+      if(id(pharameter)==-2||id(pharameter)==-3) {
+        id(my_nextion).set_component_value("page0.x0", (id(dcps_voltage_monitor).state*175-1.1)*10); //어느 부분부터 값이 안떨어짐
+        id(my_nextion).set_component_value("page0.x2", (id(dcps_current_monitor).state/8.2/20/0.001*1.53)*100); //pcb로 들어오는 전압 1.513배 적음
+        id(my_nextion).set_component_value("page0.n0", id(frequency)/1000);
+        id(my_nextion).set_component_value("page0.x8", id(duty)*100);
+        id(my_nextion).send_command_printf("page0.bt0.val=1");
+      }
+      else if(id(pharameter)==0){
+        id(my_nextion).set_component_value("page0.x0", id(voltage));
+        id(my_nextion).set_component_value("page0.x2", id(current));
+        id(my_nextion).set_component_value("page0.n0", id(frequency)/1000);
+        id(my_nextion).set_component_value("page0.x8", id(duty)*100);
+        //id(my_nextion).send_command_printf("page0.bt0.val=0");
+        //id(my_nextion).send_command_printf("page0.x0.pco=64520");
+        //id(my_nextion).send_command_printf("page0.x2.pco=0");
+        //id(my_nextion).send_command_printf("page0.n0.pco=0");
+        //id(my_nextion).send_command_printf("page0.x8.pco=0");
+      }
+      else if(id(pharameter)==1){
+        id(my_nextion).set_component_value("page0.x0", id(voltage));
+        id(my_nextion).set_component_value("page0.x2", id(current));
+        id(my_nextion).set_component_value("page0.n0", id(frequency)/1000);
+        id(my_nextion).set_component_value("page0.x8", id(duty)*100);
+        //id(my_nextion).send_command_printf("page0.bt0.val=0");
+        //id(my_nextion).send_command_printf("page0.x2.pco=64520");
+        //id(my_nextion).send_command_printf("page0.x0.pco=0");
+        //id(my_nextion).send_command_printf("page0.n0.pco=0");
+        //id(my_nextion).send_command_printf("page0.x8.pco=0");
+      }
+      else if(id(pharameter)==2){
+        id(my_nextion).set_component_value("page0.x0", id(voltage));
+        id(my_nextion).set_component_value("page0.x2", id(current));
+        id(my_nextion).set_component_value("page0.n0", id(frequency)/1000);
+        id(my_nextion).set_component_value("page0.x8", id(duty)*100);
+        //id(my_nextion).send_command_printf("page0.bt0.val=0");
+        //id(my_nextion).send_command_printf("page0.n0.pco=64520");
+        //id(my_nextion).send_command_printf("page0.x0.pco=0");
+        //id(my_nextion).send_command_printf("page0.x2.pco=0");
+        //id(my_nextion).send_command_printf("page0.x8.pco=0");
+      }
+      else if(id(pharameter)==3){
+        id(my_nextion).set_component_value("page0.x0", id(voltage));
+        id(my_nextion).set_component_value("page0.x2", id(current));
+        id(my_nextion).set_component_value("page0.n0", id(frequency)/1000);
+        id(my_nextion).set_component_value("page0.x8", id(duty)*100);
+        //id(my_nextion).send_command_printf("page0.bt0.val=0");
+        //id(my_nextion).send_command_printf("page0.x8.pco=64520");
+        //id(my_nextion).send_command_printf("page0.x0.pco=0");
+        //id(my_nextion).send_command_printf("page0.x2.pco=0");
+        //id(my_nextion).send_command_printf("page0.n0.pco=0");
+      }
+      else {
+        id(my_nextion).set_component_value("page0.x0", id(voltage));
+        id(my_nextion).set_component_value("page0.x2", id(current));
+        id(my_nextion).set_component_value("page0.n0", id(frequency)/1000);
+        id(my_nextion).set_component_value("page0.x8", id(duty)*100);
+        id(my_nextion).send_command_printf("page0.bt0.val=0");
+        id(my_nextion).send_command_printf("page0.x0.pco=0");
+        id(my_nextion).send_command_printf("page0.x2.pco=0");
+        id(my_nextion).send_command_printf("page0.n0.pco=0");
+        id(my_nextion).send_command_printf("page0.x8.pco=0");
+      }
+
+      if(id(ps_pwm_status).state==true)
+      {
+        id(my_nextion).send_command_printf("page0.t2.txt=\"ON\"");
+        //id(my_nextion).send_command_printf("page0.t2.pco=63488");
+      }
+      else {
+        id(my_nextion).send_command_printf("page0.t2.txt=\"OFF\"");
+        //id(my_nextion).send_command_printf("page0.t2.pco=0");
+      }
+    on_touch:
+      then:
+        lambda: |-
+          if(page_id==0 && component_id==17) {
+            id(pharameter)=-2;
+            if(id(ps_pwm_fault_sensor).state==false){
+              id(pspwm_output).turn_on();
+              id(ps_pwm_status).turn_on();
+              //id(onboard_led).turn_on();
+            }
+            delay(100);
+            id(dcps_pwr_onoff).turn_on();
+          } 
+          else if(page_id==0 && component_id==24) {
+            id(pharameter)=-3;
+            id(dcps_pwr_onoff).turn_off();
+            delay(100);
+            id(pspwm_output).turn_off();
+            id(ps_pwm_status).turn_off();
+            //id(onboard_led).turn_off();
+          }
+          else if(page_id==0 && component_id==25) {
+            id(my_nextion).send_command_printf("page0.x0.pco=0");
+            id(my_nextion).send_command_printf("page0.x2.pco=0");
+            id(my_nextion).send_command_printf("page0.n0.pco=0");
+            id(my_nextion).send_command_printf("page0.x8.pco=0");
+            if (id(pharameter)==-2||id(pharameter)==-3) {
+              id(pharameter) = -1;
+            } 
+            else {
+              id(pharameter) = -2;
+            }
+          }
+          else if(page_id==0 && component_id==1) {
+            id(pharameter)=0;
+          }
+          else if(page_id==0 && component_id==4) {
+            id(pharameter)=1;
+          }
+          else if(page_id==0 && component_id==21) {
+            id(pharameter)=2;
+          }
+          else if(page_id==0 && component_id==22) {
+            id(pharameter)=3;
+          }
+    on_page: 
+      then:
+        lambda: |-
+          id(pharameter)=id(pharameter);
+
+interval:
+  - interval: 2s
+    then: 
+      - lambda: |-
+          // FAULT Check
+          if(id(ch1_fault_drv_a).state) {
+            id(my_nextion).send_command_printf("page1.t1.pco=63488");
+            id(my_nextion).send_command_printf("page0.t4.pco=63488");
+          }
+          else {
+            id(my_nextion).send_command_printf("page1.t1.pco=0");
+            id(my_nextion).send_command_printf("page0.t4.pco=0");
+          }
+          if(id(ch2_fault_drv_b).state) {
+            id(my_nextion).send_command_printf("page1.t2.pco=63488");
+            id(my_nextion).send_command_printf("page0.t4.pco=63488");
+          }
+          else {
+            id(my_nextion).send_command_printf("page1.t2.pco=0");
+            id(my_nextion).send_command_printf("page0.t4.pco=0");
+          }
+          if(id(ch3_fault_drv_c).state) {
+            id(my_nextion).send_command_printf("page1.t3.pco=63488");
+            id(my_nextion).send_command_printf("page0.t4.pco=63488");
+          }
+          else {
+            id(my_nextion).send_command_printf("page1.t3.pco=0");
+            id(my_nextion).send_command_printf("page0.t4.pco=0");
+          }
+          if(id(ch4_fault_drv_d).state) {
+            id(my_nextion).send_command_printf("page1.t4.pco=63488");
+            id(my_nextion).send_command_printf("page0.t4.pco=63488");
+          }
+          else {
+            id(my_nextion).send_command_printf("page1.t4.pco=0");
+            id(my_nextion).send_command_printf("page0.t4.pco=0");
+          }
+          if(id(ch5_fault_temperature).state) {
+            id(my_nextion).send_command_printf("page1.t5.pco=63488");
+            id(my_nextion).send_command_printf("page0.t4.pco=63488");
+          }
+          else {
+            id(my_nextion).send_command_printf("page1.t5.pco=0");
+            id(my_nextion).send_command_printf("page0.t4.pco=0");
+          }
+          if(id(ch6_fault_emergency).state) {
+            id(my_nextion).send_command_printf("page1.t6.pco=63488");
+            id(my_nextion).send_command_printf("page0.t4.pco=63488");
+          }
+          else {
+            id(my_nextion).send_command_printf("page1.t6.pco=0");
+            id(my_nextion).send_command_printf("page0.t4.pco=0");
+          }
+          if(id(ch7_fault_dcpsu).state) {
+            id(my_nextion).send_command_printf("page1.t7.pco=63488");
+            id(my_nextion).send_command_printf("page0.t4.pco=63488");
+          }
+          else {
+            id(my_nextion).send_command_printf("page1.t7.pco=0");
+            id(my_nextion).send_command_printf("page0.t4.pco=0");
+          }
+          if(id(ch8_fault_external).state) {
+            id(my_nextion).send_command_printf("page1.t8.pco=63488");
+            id(my_nextion).send_command_printf("page0.t4.pco=63488");
+            //delay(500);
+            //id(my_nextion).send_command_printf("page0.t4.pco=65535");
+            //delay(500);
+          }
+          else {
+            id(my_nextion).send_command_printf("page1.t8.pco=0");
+            id(my_nextion).send_command_printf("page0.t4.pco=0");
+          }
+          if(id(ocp_pusle).state) {
+            id(my_nextion).send_command_printf("page1.t9.pco=63488");
+            id(my_nextion).send_command_printf("page0.t4.pco=63488");
+          }
+          else {
+            id(my_nextion).send_command_printf("page1.t9.pco=0");
+            id(my_nextion).send_command_printf("page0.t4.pco=0");
+          }

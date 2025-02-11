@@ -1,0 +1,69 @@
+esphome:
+  includes:
+
+cd74hc4067:
+  - id: cd74hc4067_1
+    pin_s0: GPIO41
+    pin_s1: GPIO40
+    # below pins only used for dummy 
+    pin_s2: GPIO20  # USB_D+
+    pin_s3: GPIO19  # USB_D-
+
+## True-RMS_Monitor
+sensor:
+  - platform: ads1115
+    multiplexer: 'A2_GND'
+    gain: 2.048
+    name: "True-RMS_Monitor"
+    id: true_rms_monitor
+    update_interval: 3600s
+
+  # - platform: cd74hc4067
+  #   id: dummy_raw
+  #   number: 0
+  #   sensor: true_rms_monitor
+  #   update_interval: 3600s
+  - platform: cd74hc4067
+    id: inverter_current_raw
+    number: 1
+    sensor: true_rms_monitor
+    update_interval: 3600s
+  - platform: cd74hc4067
+    id: inverter_voltage_raw
+    number: 2
+    sensor: true_rms_monitor
+    update_interval: 3600s
+  - platform: cd74hc4067
+    id: highvoltage_current_raw
+    number: 3
+    sensor: true_rms_monitor
+    update_interval: 3600s
+
+  # - platform: ct_clamp
+  #   name: "dummy"
+  #   sensor: dummy_raw
+  #   # sample_duration: 100ms
+  #   update_interval: 2s
+  #   unit_of_measurement: "A"
+  #   device_class: "current"
+  - platform: ct_clamp
+    name: "Inverter_Current"
+    sensor: inverter_current_raw
+    # sample_duration: 100ms
+    update_interval: 2s
+    unit_of_measurement: "A"
+    device_class: "current"
+  - platform: ct_clamp
+    name: "Inverter_Voltage"
+    sensor: inverter_voltage_raw
+    # sample_duration: 100ms
+    update_interval: 2s
+    unit_of_measurement: "V"
+    device_class: "voltage"
+  - platform: ct_clamp
+    name: "HighVoltage_Current"
+    sensor: highvoltage_current_raw
+    # sample_duration: 100ms
+    update_interval: 2s
+    unit_of_measurement: "A"
+    device_class: "current"

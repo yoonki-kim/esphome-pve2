@@ -1,0 +1,32 @@
+esphome:
+  includes:
+
+ads1115:
+  - address: 0x48
+    continuous_mode: true
+    i2c_id: i2c_bus_a
+
+sensor:
+  - platform: ads1115
+    multiplexer: 'A0_GND'
+    gain: 2.048
+    name: "01_DCPS-Voltage_Monitor"
+    id: dcps_voltage_monitor
+    update_interval: 2s
+  - platform: ads1115
+    multiplexer: 'A1_GND'
+    gain: 2.048
+    name: "02_DCPS-Current_Monitor"
+    id: dcps_current_monitor
+    update_interval: 2s
+  # - platform: ads1115
+  #   multiplexer: 'A2_GND'
+  #   gain: 2.048
+  #   name: "True-RMS_Monitor"
+  #   update_interval: 2s
+  - platform: ads1115
+    multiplexer: 'A3_GND'
+    gain: 2.048
+    name: "O3-Sensor_Monitor"
+    id: o3_sensor_monitor
+    update_interval: 2s
