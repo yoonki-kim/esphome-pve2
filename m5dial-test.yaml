@@ -1,0 +1,94 @@
+substitutions:
+  name: "m5-dial"
+  wifi_ssid: !secret wifi_ssid
+  wifi_password: !secret wifi_password  
+
+# packages:
+#   m5_tough_package:
+#     url: https://github.com/SmartHome-yourself/m5-dial-for-esphome
+#     ref: main
+#     file: shys-m5-dial.yaml
+#     refresh: 1h
+
+packages:
+  m5_tough_package: !include external_components/m5-dial-for-esphome/shys-m5-dial.yaml
+
+shys_m5_dial:
+  name: Dial
+  screen_off_time: 45000
+  rotary_step_width: 5
+  long_press_duration: 1200
+  font: FreeSans12pt7b
+  font_factor: 1
+
+  devices:
+    # lights:
+    #   - entity: light.my_light1
+    #     name: Light 1
+    #     modes:
+    #       dimm_mode:
+    #         enable: true
+    #         rotary_step_width: 10
+    #       rgb_mode: 
+    #         enable: true
+    #         rotary_step_width: 30
+    #       white_mode: 
+    #         enable: true
+    #         rotary_step_width: 100
+    #         min_kelvin: 2500
+    #         max_kelvin: 7000
+            
+    #   - entity: light.my_light2
+    #     name: Light 2
+
+    # switches:
+    #   - entity: switch.my_switch
+    #     name: Switch 1
+        
+    # climates:
+    #   - entity: climate.my_climate1
+    #     name: Heater
+    #     modes:
+    #       temp_mode:
+    #         rotary_step_width: 1
+    #         min_temperature: 4
+    #         max_temperature: 30
+            
+    # covers:
+    #   - entity: cover.my_cover1
+    #     name: Cover 1
+    #     modes:
+    #       position_mode:
+    #         rotary_step_width: 5
+
+    fans:
+      - entity: fan.my_fan1
+        name: Fan 1
+        modes:
+          speed_mode:
+            changeable_direction: true
+            rotary_step_width: 10
+
+    # media_player:
+    #   - entity: media_player.my_player1
+    #     name: MediaPlayer 1
+    #     modes:
+    #       play_mode:
+    #         rotary_step_width: 10
+    #       source_mode:
+    #         rotary_step_width: 1
+    #         sources:
+    #           - name: 1Live
+    #             content_id: 1Live
+    #             content_type: TUNEIN
+    #           - name: WDR2
+    #             content_id: "http://wdr-wdr2-bergischesland.icecast.wdr.de/wdr/wdr2/bergischesland/mp3/128/stream.mp3"
+    #             content_type: custom
+
+    # lock:
+    #   - entity: lock.my_lock1
+    #     name: Lock 1
+    #     modes:
+    #       lock_mode:
+    #         rotary_step_width: 1
+    #         open_on_button: false

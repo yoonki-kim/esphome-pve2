@@ -1,0 +1,10 @@
+substitutions:
+  esphome_name: "uros-esphome"
+
+esphome:
+  name: ${esphome_name}
+  friendly_name: ${esphome_name}
+
+packages:
+  device: !include "works/uros-esphome/device.yaml"
+
